@@ -1,0 +1,60 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn import datasets
+%matplotlib inline
+
+boston = datasets.load_boston()
+
+linear_X, linear_y = datasets.make_regression(n_samples=boston.data.shape[0],
+                                              n_features=boston.data.shape[1],
+                                              noise=75, random_state=46)
+                                              
+linear_feature_names = ['X'+str(feature+1) for feature in range(linear_X.shape[1])]
+
+df = pd.DataFrame(boston.data, columns=boston.feature_names)
+df['HousePrice'] = boston.target
+df.head()
+
+from sklearn.linear_model import LinearRegression
+
+boston_model = LinearRegression()
+boston_model.fit(boston.data, boston.target)
+
+boston_r2 = boston_model.score(boston.data, boston.target)
+print('R^2: {0}'.format(boston_r2))
+
+linear_model = LinearRegression()
+linear_model.fit(linear_X, linear_y)
+
+linear_r2 = linear_model.score(linear_X, linear_y)
+print('R^2: {0}'.format(linear_r2))
+
+def calculate_residuals(model, features, label):
+    predictions = model.predict(features)
+    df_results = pd.DataFrame({'Actual': label, 'Predicted': predictions})
+    df_results['Residuals'] = abs(df_results['Actual']) - abs(df_results['Predicted'])
+    
+    return df_results
+    
+def linear_assumption(model, features, label):
+    print('Assumption 1: Linear Relationship between the Target and the Feature', '\n')
+        
+    print('Checking with a scatter plot of actual vs. predicted.',
+           'Predictions should follow the diagonal line.')
+    
+    # Calculating residuals for the plot
+    df_results = calculate_residuals(model, features, label)
+    
+    # Plotting the actual vs predicted values
+    sns.lmplot(x='Actual', y='Predicted', data=df_results, fit_reg=False, size=7)
+        
+    # Plotting the diagonal line
+    line_coords = np.arange(df_results.min().min(), df_results.max().max())
+    plt.plot(line_coords, line_coords,  # X and y points
+             color='darkorange', linestyle='--')
+    plt.title('Actual vs. Predicted')
+    plt.show()
+    
+  linear_assumption(linear_model, linear_X, linear_y)
